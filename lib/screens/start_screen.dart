@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../game/chess_ai.dart';
+import '../game/chess_ai_impl.dart';
 import '../game/piece.dart';
 import '../theme.dart';
 import '../widgets/chess_piece_view.dart';
 import 'game_screen.dart';
 
-/// Title screen. Starts a local two-player game and holds the pre-game
-/// options. The computer-opponent entry is deliberately inert: the seam for it
-/// exists in the controller, but no engine ships with this build.
+/// Title screen. Starts a local two-player game, or a game against the
+/// built-in computer opponent at a chosen difficulty.
 class StartScreen extends StatefulWidget {
   const StartScreen({super.key});
 
@@ -18,13 +19,38 @@ class StartScreen extends StatefulWidget {
 class _StartScreenState extends State<StartScreen> {
   bool _rotateForBlack = false;
 
-  void _startGame() {
+  void _startGame({ChessAi? ai}) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) =>
-            GameScreen(rotateForBlack: _rotateForBlack),
+            GameScreen(rotateForBlack: _rotateForBlack, ai: ai),
       ),
     );
+  }
+
+  Future<void> _playComputer() async {
+    final ChessAi? chosen = await showDialog<ChessAi>(
+      context: context,
+      builder: (BuildContext context) => SimpleDialog(
+        backgroundColor: AppTheme.panel,
+        title: const Text('Choose difficulty'),
+        children: <Widget>[
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(easyAi),
+            child: const Text('Easy'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(mediumAi),
+            child: const Text('Medium'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(hardAi),
+            child: const Text('Hard'),
+          ),
+        ],
+      ),
+    );
+    if (chosen != null) _startGame(ai: chosen);
   }
 
   void _showHowToPlay() {
@@ -61,8 +87,6 @@ class _StartScreenState extends State<StartScreen> {
               return SingleChildScrollView(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  // IntrinsicHeight gives the Column a finite height so the
-                  // Spacers still work inside the scroll view.
                   child: IntrinsicHeight(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
@@ -98,7 +122,10 @@ class _StartScreenState extends State<StartScreen> {
                             child: const Text('NEW GAME'),
                           ),
                           const SizedBox(height: 14),
-                          const _ComingSoonButton(),
+                          OutlinedButton(
+                            onPressed: _playComputer,
+                            child: const Text('PLAY THE COMPUTER'),
+                          ),
                           const SizedBox(height: 22),
                           _RotateOption(
                             value: _rotateForBlack,
@@ -125,7 +152,6 @@ class _StartScreenState extends State<StartScreen> {
   }
 }
 
-/// Row of pieces used as the title-screen artwork.
 class _PieceParade extends StatelessWidget {
   const _PieceParade();
 
@@ -140,7 +166,6 @@ class _PieceParade extends StatelessWidget {
     ];
     return SizedBox(
       height: 96,
-      // Scales the row down on narrow phones instead of clipping it.
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Row(
@@ -155,44 +180,6 @@ class _PieceParade extends StatelessWidget {
                   size: piece.type == PieceType.king ? 92 : 76,
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Placeholder for the future engine opponent.
-class _ComingSoonButton extends StatelessWidget {
-  const _ComingSoonButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.45,
-      child: OutlinedButton(
-        onPressed: null,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('PLAY THE COMPUTER'),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0x33D3A84C),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Text(
-                'SOON',
-                style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 1,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.accent,
-                ),
-              ),
-            ),
           ],
         ),
       ),

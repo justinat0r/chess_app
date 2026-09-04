@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../game/game_controller.dart';
+import '../game/chess_ai.dart';
 import '../game/move.dart';
 import '../game/piece.dart';
 import '../theme.dart';
@@ -17,18 +18,23 @@ import 'win_screen.dart';
 /// The board screen: two player panels, the board itself, the move list, and
 /// the routing to the win and tie screens when the game ends.
 class GameScreen extends StatefulWidget {
-  const GameScreen({super.key, this.rotateForBlack = false});
+  const GameScreen({super.key, this.rotateForBlack = false, this.ai});
 
   /// Rotate the board each turn so the player to move sits at the bottom.
   final bool rotateForBlack;
+
+  final ChessAi? ai;
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late final GameController _controller =
-      GameController(rotateForBlack: widget.rotateForBlack);
+    late final GameController _controller = GameController(
+    rotateForBlack: widget.rotateForBlack,
+    blackPlayer: widget.ai == null ? PlayerType.human : PlayerType.computer,
+    ai: widget.ai,
+  );
   final ScrollController _notationScroll = ScrollController();
   bool _resultShown = false;
 

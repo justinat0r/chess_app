@@ -33,4 +33,3 @@ flutter run
 - `lib/widgets/` — board view, players, etc.
 - `android/` — Android files
 - `test/` — unit tests
-
